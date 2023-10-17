@@ -1,0 +1,45 @@
+\documentclass[11pt]{article}
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%opening
+\title{Investigating the Two Lane Nagel–Schreckenberg Model}
+\author{Westley, A.}
+\date{\vspace{-5ex}}
+
+\begin{document}
+	
+	\maketitle 
+	
+	\hfill \break
+	
+	\section*{Introduction}
+	
+	The Nagel-Schreckenberg (NaSch) Model is a simple cellular automaton model for single-lane traffic flow. It was introduced in 1992 by Kai Nagel and Michael Schreckenberg \cite{nagel1992cellular} with the purpose of stochastically simulating the human element of traffic. In this model, a road treated as a discrete lattice of cells with periodic boundary conditions. Each cell can contain no more than one vehicle. Each vehicle has an integer velocity of $0 \leq \nu \leq \nu_{max}$, and travels along the lattice according to four simple rules: 
+	
+	\begin{enumerate}
+		\item \textbf{Acceleration}: If the velocity $\nu$ of a vehicle is lower than $\nu_{max}$, its velocity is increased by one. $\nu \rightarrow \nu + 1$.
+		\item \textbf{Slowing Down}: If a vehicle at site $i$ sees the next vehicle at site $j \leq \nu_i$, it reduces its speed to $j-1$. $\nu_i \rightarrow j-1$.
+		\item \textbf{Randomisation}: With probability p, the velocity of each vehicle (if $\nu > 0$) is decreased by one. $\nu \rightarrow \nu - 1$.
+		\item \textbf{Car Motion}: Each vehicle is advanced $\nu$ cells.
+	\end{enumerate}
+	
+	Just from these rules, the NaSch model shows traffic jams as emergent properties of the individual interactions between nearby cars. \\
+	
+	One of the many extensions of the NaSch model is the two lane variation. This is similar to two parallel, single lane NaSch models, except there are some additional rules which govern how the cars change lanes\cite{wright2013flow}. These rules are as follows:
+	
+	\begin{enumerate}
+		\item \textbf{Incentive}: If the velocity of vehicle $i$ is more than or equal to its distance to vehicle $j$ ahead ($\nu_i \leq j-i$), it is more beneficial to change lanes and remain at velocity $\nu_i$.
+		\item \textbf{Safety}: For a vehicle $i$ to transfer to the adjacent lane, the region [$i-gap_{behind}, i+gap_{ahead}]$ where $gap_{behind} = \nu_{max}$ and $gap_{ahead} = \nu_i$.
+	\end{enumerate}
+	
+	While the single-lane model has proven effective at modelling many real-world scenarios, the two lane variation is more effective at simulating multi-lane systems such as highways.\\ 
+	
+	In this report, I will investigate the standard two lane NaSch model, as well as apply it to real-world scenarios like speed limit changes and road bottlenecks.
+	
+	
+	\newpage
+	
+	\bibliographystyle{plain}
+	\bibliography{refs}
+	
+\end{document}
