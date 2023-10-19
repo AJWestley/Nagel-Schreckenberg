@@ -8,8 +8,8 @@ int main(int argc, char *argv[]) {
 	if (argc == 1) {
 		int length = 150, vmax = 5;
 		struct Cell **road = create_road(length, vmax);
-		populate_road(road, length, 3, 1);
-		add_barrier(road, 50, 10, length);
+		populate_road(road, length, 5, 1);
+		add_speed_limit(road, 9, 50, 75, length);
 		print_road(road, length);
 		for (int i = 0; i < 100; i++) {
 			sweep(road, length, 0.2);
@@ -71,6 +71,13 @@ void add_barrier(struct Cell **road, int pos, int count, int length) {
 	}
 }
 
+void add_speed_limit(struct Cell **road, int vmax, int pos, int count, int length) {
+	for (int i = 1; i <= count; i++) {
+		road[0][(pos+i)%length].v_max = vmax;
+		road[1][(pos+i)%length].v_max = vmax;
+	}
+}
+
 int count_vehicles(struct Cell **road, int length) {
 	int count = 0;
 	for (int lane = 0; lane < 2; lane++) {
@@ -105,8 +112,11 @@ void print_road(struct Cell **road, int length) {
 }
 
 void speed_up(struct Cell **road, int lane, int pos) {
-	if (road[lane][pos].content < road[lane][pos].v_max) 
-		road[lane][pos].content++;
+	if (road[lane][pos].content >= road[lane][pos].v_max) {
+		road[lane][pos].content = road[lane][pos].v_max;
+		return;
+	}
+	road[lane][pos].content++;
 }
 
 void dont_crash(struct Cell **road, int *lane, int pos, int length) {

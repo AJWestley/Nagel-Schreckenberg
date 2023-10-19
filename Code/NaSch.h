@@ -17,6 +17,7 @@ void move_vehicle(struct Cell **road, int *lane, int pos, int length, float brea
 struct Cell** create_road(int length, int vmax);
 void populate_road(struct Cell **road, int length, int cells_per, int num_vehicles);
 void add_barrier(struct Cell **road, int pos, int count, int length);
+void add_speed_limit(struct Cell **road, int vmax, int pos, int count, int length);
 int count_vehicles(struct Cell **road, int length);
 void free_road(struct Cell **road);
 void print_road(struct Cell **road, int length);
