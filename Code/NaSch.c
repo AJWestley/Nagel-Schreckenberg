@@ -5,39 +5,79 @@
 #include "NaSch.h"
 
 int main(int argc, char *argv[]) {
-	if (argc == 1) {
-		int length = 150, vmax = 5;
-		struct Cell **road = create_road(length, vmax);
-		populate_road(road, length, 5, 1);
-		add_speed_limit(road, 9, 50, 75, length);
-		print_road(road, length);
-		for (int i = 0; i < 100; i++) {
-			sweep(road, length, 0.2);
-			sleep(1);
-			print_road(road, length);
+	if (argc < 3) {
+		usage();
+	}
+
+	seed();
+	
+	int mode = atoi(argv[1]);
+	char *filename = argv[2];
+	int length, vmax, cells_per, num_vehicles, N;
+	float p;
+
+	switch (mode)
+	{
+	case 1:
+		if (argc < 9) {
+			usage();
 		}
-		free_road(road);
+		length = atoi(argv[3]);
+		vmax = atoi(argv[4]);
+		p = atof(argv[5]);
+		cells_per = atoi(argv[6]);
+		num_vehicles = atoi(argv[7]);
+		N = atoi(argv[8]);
+		regular_NaSch(filename, length, vmax, p, cells_per, num_vehicles, N);
+		break;
+	
+	default:
+		break;
 	}
 	
 	return EXIT_SUCCESS;
 }
 
-void sweep(struct Cell **road, int length, float break_probability) {
-	for (int pos = length-1; pos >= 0; pos--) {
-		for (int lane = 0; lane < 2; lane++) {
-			move_vehicle(road, &lane, pos, length, break_probability);
-		}
+void regular_NaSch(char *filename, int length, int vmax, float p, int cells_per, int num_vehicles, int N) {
+	FILE *out_file = fopen(filename, "w");
+	FILE *tp = fopen("throughput.txt", "w");
+
+	struct Cell **road = create_road(length, vmax);
+	populate_road(road, length, cells_per, num_vehicles);
+	float density = count_vehicles(road, length) / (2.0 * length);
+
+	int throughput, stationary;
+
+	for (int i = 0; i < N; i++) {
+		throughput = sweep(road, length, p, TRUE);
+		stationary = count_stationary(road, length);
+		fprintf(tp, "%d,", throughput);
+		fprintf(out_file, "%d,", stationary);
 	}
+
+	free_road(road);
+	fclose(out_file);
+	fclose(tp);
 }
 
-void move_vehicle(struct Cell **road, int *lane, int pos, int length, float break_probability) {
+int sweep(struct Cell **road, int length, float break_probability, int wrap) {
+	int throughput = 0;
+	for (int pos = length-1; pos >= 0; pos--) {
+		for (int lane = 0; lane < 2; lane++) {
+			throughput += move_vehicle(road, &lane, pos, length, break_probability, wrap);
+		}
+	}
+	return throughput;
+}
+
+int move_vehicle(struct Cell **road, int *lane, int pos, int length, float break_probability, int wrap) {
 	if (road[*lane][pos].content == EMPTY || road[*lane][pos].content == BARRIER) 
-		return;
+		return 0;
 	
 	speed_up(road, *lane, pos);
-	dont_crash(road, lane, pos, length);
+	dont_crash(road, lane, pos, length, wrap);
 	maybe_slow_down(road, *lane, pos, break_probability);
-	go(road, *lane, pos, length);
+	return go(road, *lane, pos, length, wrap);
 }
 
 struct Cell** create_road(int length, int vmax) {
@@ -56,9 +96,9 @@ struct Cell** create_road(int length, int vmax) {
 void populate_road(struct Cell **road, int length, int cells_per, int num_vehicles) {
 	int counter1 = cells_per, counter2 = cells_per / 2;
 	for (int i = 0; i < length; i++) {
-		if (counter1 < num_vehicles) road[0][i].content = 0;
+		if (counter1 < num_vehicles) road[0][i].content = road[0][i].v_max;
 		if (counter1 == 0) counter1 = cells_per;
-		if (counter2 < num_vehicles) road[1][i].content = 0;
+		if (counter2 < num_vehicles) road[1][i].content = road[1][i].v_max;
 		if (counter2 == 0) counter2 = cells_per;
 		counter1--;
 		counter2--;
@@ -89,6 +129,16 @@ int count_vehicles(struct Cell **road, int length) {
 	return count;
 }
 
+int count_stationary(struct Cell **road, int length) {
+	int count = 0;
+	for (int lane = 0; lane < 2; lane++) {
+		for (int pos = 0; pos < length; pos++) {
+			if (road[lane][pos].content == 0) count++;
+		}
+	}
+	return count;
+}
+
 void free_road(struct Cell **road) {
 	free(road[0]);
 	free(road[1]);
@@ -111,6 +161,16 @@ void print_road(struct Cell **road, int length) {
 	}
 }
 
+void fprint_road(struct Cell **road, int length, FILE *fp) {
+	int i, j;
+	for (i = 0; i < 2; i++) {
+		for (j = 0; j < length; j++) {
+			fprintf(fp, "%d", road[i][j].content);
+		}
+		i == 0 ? fprintf(fp, ":") : fprintf(fp, "\n");
+	}
+}
+
 void speed_up(struct Cell **road, int lane, int pos) {
 	if (road[lane][pos].content >= road[lane][pos].v_max) {
 		road[lane][pos].content = road[lane][pos].v_max;
@@ -119,12 +179,13 @@ void speed_up(struct Cell **road, int lane, int pos) {
 	road[lane][pos].content++;
 }
 
-void dont_crash(struct Cell **road, int *lane, int pos, int length) {
+void dont_crash(struct Cell **road, int *lane, int pos, int length, int wrap) {
 	int will_crash = FALSE;
 	int d;
 
 	// Check if going to crash
 	for (d = 1; d <= road[*lane][pos].content; d++) {
+		if (!wrap && pos + d >= length) break;
 		if (road[*lane][(pos+d)%length].content != EMPTY) {
 			will_crash = TRUE;
 			break;
@@ -133,7 +194,7 @@ void dont_crash(struct Cell **road, int *lane, int pos, int length) {
 	if (!will_crash) return;
 
 	// Change lanes if possible
-	if (adjacent_lane_open(road, *lane, pos, length)) {
+	if (adjacent_lane_open(road, *lane, pos, length, wrap)) {
 		int adj_lane = (*lane + 1) % 2;
 		road[adj_lane][pos].content = road[*lane][pos].content;
 		road[*lane][pos].content = EMPTY;
@@ -146,25 +207,34 @@ void dont_crash(struct Cell **road, int *lane, int pos, int length) {
 }
 
 void maybe_slow_down(struct Cell **road, int lane, int pos, float p) {
-	if (road[lane][pos].content != 0 && generate_float(0, 1) < p) road[lane][pos].content--;
+	if (road[lane][pos].content != 0 && generate_float(0, 1) < p) {
+		road[lane][pos].content--;
+		printf("reducing speed");
+	} 
 }
 
-void go(struct Cell **road, int lane, int pos, int length) {
+int go(struct Cell **road, int lane, int pos, int length, int wrap) {
 	int v = road[lane][pos].content;
-	if (v == 0) return;
-	road[lane][(pos+v)%length].content = road[lane][pos].content;
+	if (v == 0) return 0;
+
+	if (wrap || pos + v < length)
+		road[lane][(pos+v)%length].content = road[lane][pos].content;
 	road[lane][pos].content = EMPTY;
+	if (pos + v >= length) return 1;
+	return 0;
 }
 
-int adjacent_lane_open(struct Cell **road, int lane, int pos, int length) {
+int adjacent_lane_open(struct Cell **road, int lane, int pos, int length, int wrap) {
 	int lookahead = road[lane][pos].content;
 	int lookbehind = road[lane][pos].v_max / 2;
 	int adj_lane = (lane + 1) % 2;
 	for (int d = 0; d <= lookahead; d++) {
+		if (!wrap && pos + d >= length) break;
 		if (road[adj_lane][(pos+d)%length].content != EMPTY) 
 			return FALSE;
 	}
 	for (int d = 1; d <= lookbehind; d++) {
+		if (!wrap && d > pos) break;
 		if (road[adj_lane][(((pos-d)%length)+length)%length].content != EMPTY && road[adj_lane][(((pos-d)%length)+length)%length].content != BARRIER) 
 			return FALSE;
 	}
@@ -178,4 +248,14 @@ float generate_float(float min, float max) {
 void seed() {
 	time_t t;
 	srand48((unsigned)time(&t));
+}
+
+void usage() {
+	printf("USAGE: ./NaSch <mode> <filename> <parameters>\n\n");
+	printf("Modes:\n");
+	printf("1 -> Regular NaSch Model: <length> <vmax> <break probability> <cells per> <num vehicles> <sample size>\n");
+	printf("2 -> Speed Limited NaSch Model: \n");
+	printf("3 -> Bottlenecked NaSch Model: \n");
+	printf("4 -> Roadworks scenario NaSch Model: \n");
+	exit(EXIT_FAILURE);
 }
