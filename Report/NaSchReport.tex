@@ -1,10 +1,12 @@
 \documentclass[11pt]{article}
 \usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage{amsmath}
+\usepackage{titlesec}
+\titlelabel{\thetitle.\quad}
 
 %opening
-\title{Investigating the Two Lane Nagel–Schreckenberg Model}
+\title{Mitigating the Effect of Road Bottlenecking Using the Two-Lane Nagel--Schreckenberg Model}
 \author{Westley, A.}
-\date{\vspace{-5ex}}
 
 \begin{document}
 	
@@ -12,30 +14,63 @@
 	
 	\hfill \break
 	
-	\section*{Introduction}
+	\section{Introduction} \label{sec:intro}
 	
-	The Nagel-Schreckenberg (NaSch) Model is a simple cellular automaton model for single-lane traffic flow. It was introduced in 1992 by Kai Nagel and Michael Schreckenberg \cite{nagel1992cellular} with the purpose of stochastically simulating the human element of traffic. In this model, a road treated as a discrete lattice of cells with periodic boundary conditions. Each cell can contain no more than one vehicle. Each vehicle has an integer velocity of $0 \leq \nu \leq \nu_{max}$, and travels along the lattice according to four simple rules: 
-	
-	\begin{enumerate}
-		\item \textbf{Acceleration}: If the velocity $\nu$ of a vehicle is lower than $\nu_{max}$, its velocity is increased by one. $\nu \rightarrow \nu + 1$.
-		\item \textbf{Slowing Down}: If a vehicle at site $i$ sees the next vehicle at site $j \leq \nu_i$, it reduces its speed to $j-1$. $\nu_i \rightarrow j-1$.
-		\item \textbf{Randomisation}: With probability p, the velocity of each vehicle (if $\nu > 0$) is decreased by one. $\nu \rightarrow \nu - 1$.
-		\item \textbf{Car Motion}: Each vehicle is advanced $\nu$ cells.
-	\end{enumerate}
-	
-	Just from these rules, the NaSch model shows traffic jams as emergent properties of the individual interactions between nearby cars. \\
-	
-	One of the many extensions of the NaSch model is the two lane variation. This is similar to two parallel, single lane NaSch models, except there are some additional rules which govern how the cars change lanes\cite{wright2013flow}. These rules are as follows:
+	The Nagel--Schreckenberg (NaSch) model is a simple cellular automaton model for single-lane traffic flow. It was introduced in 1992 by Kai Nagel and Michael Schreckenberg \cite{nagel1992cellular}, with the purpose of stochastically simulating the human element of traffic. In this model, a road is treated as a discrete lattice of cells with periodic boundary conditions. Each cell can contain no more than one vehicle. Each vehicle has an integer velocity of $0 \leq \nu \leq \nu_{max}$, and travels along the lattice according to the following four simple rules: 
 	
 	\begin{enumerate}
-		\item \textbf{Incentive}: If the velocity of vehicle $i$ is more than or equal to its distance to vehicle $j$ ahead ($\nu_i \leq j-i$), it is more beneficial to change lanes and remain at velocity $\nu_i$.
-		\item \textbf{Safety}: For a vehicle $i$ to transfer to the adjacent lane, the region [$i-gap_{behind}, i+gap_{ahead}]$ where $gap_{behind} = \nu_{max}$ and $gap_{ahead} = \nu_i$.
+		\item \textbf{Acceleration}: if the velocity $\nu$ of a vehicle is lower than $\nu_{max}$, its velocity is increased by one. $\nu \rightarrow \nu + 1$.
+		\item \textbf{Slowing down}: if a vehicle at site $i$ sees the next vehicle at site $j \leq \nu_i$, it reduces its speed to $j-1$. $\nu_i \rightarrow j-1$.
+		\item \textbf{Randomisation}: with probability p, the velocity of each vehicle (if $\nu > 0$) is further decreased by one. $\nu \rightarrow \nu - 1$.
+		\item \textbf{Car motion}: each vehicle is advanced $\nu$ cells.
 	\end{enumerate}
 	
-	While the single-lane model has proven effective at modelling many real-world scenarios, the two lane variation is more effective at simulating multi-lane systems such as highways.\\ 
+	The power of the NaSch model comes from how its relative simplicity can reproduce known properties of traffic flow. Just from these rules, the model shows traffic jams as emergent properties of the individual interactions between nearby cars. \\
 	
-	In this report, I will investigate the standard two lane NaSch model, as well as two slight variations which I will apply to real-world scenarios like speed limit changes and road bottlenecks. 
+	The basic NaSch model has been explored and adapted in many ways in order to better model specific scenarios. One of these many extensions is the two-lane variation. This is similar to two parallel, single-lane NaSch models, except there are some additional rules which govern how the cars change lanes\cite{wright2013flow}. These rules are as follows:
 	
+	\begin{enumerate}
+		\item \textbf{Incentive}: if the velocity of vehicle $i$ is more than or equal to its distance to vehicle $j$ ahead ($\nu_i \geq j-i$), it is more beneficial to change lanes and remain at velocity $\nu_i$.
+		\item \textbf{Safety}: for a vehicle $i$ to transfer to the adjacent lane, there must be no other vehicles in the region [$i-gap_{behind}, i+gap_{ahead}]$ where $gap_{behind} = \nu_{max}$ and $gap_{ahead} = \nu_i$.
+	\end{enumerate}
+	
+	While the single-lane model has proven effective at modelling many real-world scenarios, the two lane variation is more effective at simulating multi-lane systems such as highways, which are the point of interest in this study.\\ 
+	
+	In this report, I will investigate the standard two-lane NaSch model, as well as two slight variations which I will apply to real-world scenarios like speed limit changes and road bottlenecks. 
+	
+	\section{The simulations}
+	
+	There are three scenarios of interest in this study: free-flow traffic, a road bottleneck, a reduced speed limit leading up to a bottleneck. Each scenario has an accompanying simulation, however each simulation differs from the others only slightly. Here we give the simulations a unified description, leaving most characteristics that are specific to a single simulation for its respective section.\\
+	
+	These Markov chain Monte Carlo simulations have been run using C and all random number generation was performed using the built-in drand48 function. The simulations make use of the two-lane NaSch model described above, but with one minor change to the \textbf{safety} rule. Instead of $gap_{lookback} = \nu_{max}$, we chose $gap_{lookback}$ to equal $\nu_{max}/2$. This smaller look-back distance roughly simulates the action of ``letting someone in". Without this change, a bottleneck would cause congestion in one lane while the other lane moved freely, since cars are rarely letting each other in. \\
+	
+	The bounds of the simulations also differ from the model described above, except for the regular two-lane NaSch case. All other scenarios have open boundary conditions with a regular in-flow of vehicles (further explanation later). Each vehicle's initial velocity is set to the $\nu_{max}$ of its starting cell. 
+	
+	\section{Mapping the simulation to real-world quantities}\label{sec:quantmap}
+	
+	It is important, before we begin, to establish the dimensions and scale of our simulations and how these quantities translate to the real world. The spatial dimension of our simulations is cells and the temporal dimension is time steps. Nagel and Schreckenberg argue that a single vehicle in a traffic jam takes up roughly 7.5m of the road, which would therefore be the length of a single cell. We can then use this length to convert typical speed limits (in South Africa) from km/h to cells/time-step. Since our cell length is in meters, it makes sense to convert each respective speed limit to m/s. If we then choose a single time step to represent a second of real world time we arrive at the following formula:
+	
+	\[ \frac{v}{3.6} \frac{\text{m}}{\text{s}} \times \frac{1}{7.5} \frac{\text{cells}}{\text{m}} = \nu_{max} \text{ cells/time-step} \]
+	
+	The variable $v$ refers to the speed limit in km/h. 
+	This formula yields a result of roughly 1.48 cells/time-step. This value is too small to be feasible for the simulation, since the only integer velocities this would allow are zero and one (and perhaps also two if we round up). Let's rather choose a single time step to represent 2 seconds of real world time and adjust our formula accordingly. This gives us the following:
+	
+	\[ \frac{2v}{3.6} \frac{\text{m}}{\text{s}} \times \frac{1}{7.5} \frac{\text{cells}}{\text{m}} = \nu_{max} \text{ cells/time-step} \] \\
+	
+	From this formula, we get the following integer values for $\nu_{max}$:
+	\begin{align*}
+		40 \text{ km/h} &\approx 3 \text{ cells/time-step} \\
+		60 \text{ km/h} &\approx 4 \text{ cells/time-step} \\
+		80 \text{ km/h} &\approx 6 \text{ cells/time-step} \\
+		100 \text{ km/h} &\approx 7 \text{ cells/time-step} \\
+		120 \text{ km/h} &\approx 9 \text{ cells/time-step} \\
+	\end{align*}
+
+	For the sake of uniformity, the road was the same length for all simulations, this length being equal to 4000 cells (30km). This length was chosen because it is a realistic length for a stretch of freeway, but it is not so long that it causes the computation time for each time step to become too large. The value of $p$ was fixed to a realistic value of 0.16, as found by Knospe\cite{duepublico_mods_00005368}. \\
+	
+	\section{The regular two-lane model} \label{sec:regularNaSch}
+	
+	Our first order of business 
 	
 	\newpage
 	

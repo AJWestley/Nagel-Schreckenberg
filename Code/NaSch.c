@@ -209,7 +209,6 @@ void dont_crash(struct Cell **road, int *lane, int pos, int length, int wrap) {
 void maybe_slow_down(struct Cell **road, int lane, int pos, float p) {
 	if (road[lane][pos].content != 0 && generate_float(0, 1) < p) {
 		road[lane][pos].content--;
-		printf("reducing speed");
 	} 
 }
 
