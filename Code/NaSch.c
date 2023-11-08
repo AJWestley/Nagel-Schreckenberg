@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <math.h>
 #include "NaSch.h"
 
 int main(int argc, char *argv[]) {
@@ -13,8 +14,8 @@ int main(int argc, char *argv[]) {
 	
 	int mode = atoi(argv[1]);
 	char *filename = argv[2];
-	int length, vmax, cells_per, num_vehicles, N;
-	float p;
+	int length, vmax, cells_per, num_vehicles, new_vmax, sign_dist, N;
+	float p, inflow;
 
 	switch (mode)
 	{
@@ -31,6 +32,32 @@ int main(int argc, char *argv[]) {
 		regular_NaSch(filename, length, vmax, p, cells_per, num_vehicles, N);
 		break;
 	
+	case 2:
+		if (argc < 8) {
+			usage();
+		}
+		length = atoi(argv[3]);
+		vmax = atoi(argv[4]);
+		p = atof(argv[5]);
+		inflow = atof(argv[6]);
+		N = atoi(argv[7]);
+		bottleneck_NaSch(filename, length, vmax, p, inflow, N);
+		break;
+	
+	case 3:
+		if (argc < 10) {
+			usage();
+		}
+		length = atoi(argv[3]);
+		vmax = atoi(argv[4]);
+		p = atof(argv[5]);
+		inflow = atof(argv[6]);
+		new_vmax = atoi(argv[7]);
+		sign_dist = atoi(argv[8]);
+		N = atoi(argv[9]);
+		bottleneck_speedlimit_NaSch(filename, length, vmax, p, inflow, new_vmax, sign_dist, N);
+		break;
+	
 	default:
 		break;
 	}
@@ -44,12 +71,63 @@ void regular_NaSch(char *filename, int length, int vmax, float p, int cells_per,
 
 	struct Cell **road = create_road(length, vmax);
 	populate_road(road, length, cells_per, num_vehicles);
-	float density = count_vehicles(road, length) / (2.0 * length);
 
 	int throughput, stationary;
 
 	for (int i = 0; i < N; i++) {
 		throughput = sweep(road, length, p, TRUE);
+		stationary = count_stationary(road, length);
+		fprintf(tp, "%d,", throughput);
+		fprintf(out_file, "%d,", stationary);
+	}
+
+	free_road(road);
+	fclose(out_file);
+	fclose(tp);
+}
+
+void bottleneck_NaSch(char *filename, int length, int vmax, float p, float inflow, int N) {
+	FILE *out_file = fopen(filename, "w");
+	FILE *tp = fopen("throughput.txt", "w");
+
+	struct Cell **road = create_road(length, vmax);
+	
+	int barrier_length = 200;
+	int barrier_pos = length - barrier_length - 1;
+	add_barrier(road, barrier_pos, barrier_length, length);
+
+	int throughput, stationary, added = 0;
+
+	for (int i = 0; i < N; i++) {
+		added += add_vehicles(road, inflow);
+		throughput = sweep(road, length, p, FALSE);
+		stationary = count_stationary(road, length);
+		fprintf(tp, "%d,", throughput);
+		fprintf(out_file, "%d,", stationary);
+	}
+
+	free_road(road);
+	fclose(out_file);
+	fclose(tp);
+}
+
+void bottleneck_speedlimit_NaSch(char *filename, int length, int vmax, float p, float inflow, int new_vmax, int sign_distance, int N) {
+	FILE *out_file = fopen(filename, "w");
+	FILE *tp = fopen("throughput.txt", "w");
+
+	struct Cell **road = create_road(length, vmax);
+	
+	int barrier_length = 200;
+	int barrier_pos = length - barrier_length - 1;
+	int sign_pos = barrier_pos - sign_distance - 1, sign_length = barrier_length + sign_distance;
+	add_barrier(road, barrier_pos, barrier_length, length);
+	add_speed_limit(road, new_vmax, sign_pos, sign_length, length);
+
+	int throughput, stationary, added = 0;
+
+	for (int i = 0; i < N; i++) {
+		added += add_vehicles(road, inflow);
+		throughput = sweep(road, length, p, FALSE);
 		stationary = count_stationary(road, length);
 		fprintf(tp, "%d,", throughput);
 		fprintf(out_file, "%d,", stationary);
@@ -171,6 +249,24 @@ void fprint_road(struct Cell **road, int length, FILE *fp) {
 	}
 }
 
+int add_vehicles(struct Cell **road, float mean_inflow) {
+	int cap = road[0][0].v_max - 1;
+	int amount_to_add = poisson_single(mean_inflow);
+	int added = 0;
+	for (int pos = 0; pos < cap; pos++) {
+		if (added == amount_to_add) break;
+		for (int lane = 0; lane < 2; lane++) {
+			if (road[lane][pos].content != EMPTY) continue;
+
+			road[lane][pos].content  = road[lane][pos].v_max;
+			added++;
+
+			if (added == amount_to_add) break;
+		}
+	}
+	return added;
+}
+
 void speed_up(struct Cell **road, int lane, int pos) {
 	if (road[lane][pos].content >= road[lane][pos].v_max) {
 		road[lane][pos].content = road[lane][pos].v_max;
@@ -240,6 +336,25 @@ int adjacent_lane_open(struct Cell **road, int lane, int pos, int length, int wr
 	return TRUE;
 }
 
+int poisson_single(float lambda) {
+	double exp_lambda = exp(-lambda);
+	double uniform;
+	double uniform_product;
+	int poisson;
+
+	poisson = -1;
+	uniform_product = 1;
+
+	do
+	{
+	uniform = generate_float(0, 1);
+	uniform_product = uniform_product * uniform;
+	poisson++; 
+	} while (uniform_product > exp_lambda);
+
+	return poisson;
+}
+
 float generate_float(float min, float max) {
 	return (float) (drand48() * (max - min) + min);
 }
@@ -253,8 +368,7 @@ void usage() {
 	printf("USAGE: ./NaSch <mode> <filename> <parameters>\n\n");
 	printf("Modes:\n");
 	printf("1 -> Regular NaSch Model: <length> <vmax> <break probability> <cells per> <num vehicles> <sample size>\n");
-	printf("2 -> Speed Limited NaSch Model: \n");
-	printf("3 -> Bottlenecked NaSch Model: \n");
-	printf("4 -> Roadworks scenario NaSch Model: \n");
+	printf("2 -> Bottlenecked NaSch Model: <length> <vmax> <break probability> <inflow> <sample size>\n");
+	printf("3 -> Roadworks scenario NaSch Model: <length> <vmax> <break probability> <inflow> <new vmax> <sign distance> <sample size>\n");
 	exit(EXIT_FAILURE);
 }

@@ -13,6 +13,8 @@ typedef struct Cell {
 } Cell;
 
 void regular_NaSch(char *filename, int length, int vmax, float p, int cells_per, int num_vehicles, int N);
+void bottleneck_NaSch(char *filename, int length, int vmax, float p, float inflow, int N);
+void bottleneck_speedlimit_NaSch(char *filename, int length, int vmax, float p, float inflow, int new_vmax, int sign_distance, int N);
 int sweep(struct Cell **road, int length, float break_probability, int wrap);
 int move_vehicle(struct Cell **road, int *lane, int pos, int length, float break_probability, int wrap);
 struct Cell** create_road(int length, int vmax);
@@ -23,11 +25,13 @@ int count_vehicles(struct Cell **road, int length);
 int count_stationary(struct Cell **road, int length);
 void free_road(struct Cell **road);
 void print_road(struct Cell **road, int length);
+int add_vehicles(struct Cell **road, float mean_inflow);
 void speed_up(struct Cell **road, int lane, int pos);
 void dont_crash(struct Cell **road, int *lane, int pos, int length, int wrap);
 void maybe_slow_down(struct Cell **road, int lane, int pos, float p);
 int go(struct Cell **road, int lane, int pos, int length, int wrap);
 int adjacent_lane_open(struct Cell **road, int lane, int pos, int length, int wrap);
+int poisson_single(float lambda);
 float generate_float(float min, float max);
 void seed();
 void usage();
