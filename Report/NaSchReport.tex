@@ -16,7 +16,7 @@
 	
 	\section{Introduction} \label{sec:intro}
 	
-	The Nagel--Schreckenberg (NaSch) model is a simple cellular automaton model for single-lane traffic flow. It was introduced in 1992 by Kai Nagel and Michael Schreckenberg \cite{nagel1992cellular}, with the purpose of stochastically simulating the human element of traffic. In this model, a road is treated as a discrete lattice of cells with periodic boundary conditions. Each cell can contain no more than one vehicle. Each vehicle has an integer velocity of $0 \leq \nu \leq \nu_{max}$, and travels along the lattice according to the following four simple rules: 
+	The Nagel--Schreckenberg (NaSch) model is a simple cellular automaton model for single-lane traffic flow. It was introduced in 1992 by Kai Nagel and Michael Schreckenberg \cite{nagel1992cellular}, with the purpose of stochastically simulating the human element of traffic. In this model, a road is treated as a discrete lattice of cells with periodic boundary conditions and some initial global density $\rho$. Each cell can contain no more than one vehicle. Each vehicle has an integer velocity of $0 \leq \nu \leq \nu_{max}$, and travels along the lattice according to the following four simple rules: 
 	
 	\begin{enumerate}
 		\item \textbf{Acceleration}: if the velocity $\nu$ of a vehicle is lower than $\nu_{max}$, its velocity is increased by one. $\nu \rightarrow \nu + 1$.
@@ -36,24 +36,24 @@
 	
 	While the single-lane model has proven effective at modelling many real-world scenarios, the two lane variation is more effective at simulating multi-lane systems such as highways, which are the point of interest in this study.\\ 
 	
-	In this report, I will investigate the standard two-lane NaSch model, as well as two slight variations which I will apply to real-world scenarios like speed limit changes and road bottlenecks. 
+	In this report, I make use of the two-lane NaSch model to study the effect that bottlenecks have on a road system. Firstly, the regular model is examined. The results from this examination are then used to fix the parameters of the next simulations. A bottleneck is then added to the road and two variations of this scenarios are examined: a bottleneck on an otherwise unaltered road, a reduced speed limit before a bottleneck.
 	
-	\section{The simulations}
+	\section{The simulations}\label{sec:sims}
 	
-	There are three scenarios of interest in this study: free-flow traffic, a road bottleneck, a reduced speed limit leading up to a bottleneck. Each scenario has an accompanying simulation, however each simulation differs from the others only slightly. Here we give the simulations a unified description, leaving most characteristics that are specific to a single simulation for its respective section.\\
+	\subsection{The base simulation}\label{subsec:basesim}
 	
-	These Markov chain Monte Carlo simulations have been run using C and all random number generation was performed using the built-in drand48 function. The simulations make use of the two-lane NaSch model described above, but with one minor change to the \textbf{safety} rule. Instead of $gap_{lookback} = \nu_{max}$, we chose $gap_{lookback}$ to equal $\nu_{max}/2$. This smaller look-back distance roughly simulates the action of ``letting someone in". Without this change, a bottleneck would cause congestion in one lane while the other lane moved freely, since cars are rarely letting each other in. \\
+	There are three scenarios of interest in this study: free-flow traffic, a road bottleneck, and a reduced speed limit leading up to a bottleneck. Each scenario has an accompanying simulation, however each simulation differs from the others only slightly. Here we give the simulations a unified description, leaving most characteristics that are specific to a single simulation for its respective section.\\
+	
+	These Markov chain Monte Carlo simulations were run using C and all random number generation was performed using the built-in drand48 function. The simulations make use of the two-lane NaSch model described above, but with one minor change to the \textbf{safety} rule. Instead of $gap_{lookback} = \nu_{max}$, we chose $gap_{lookback}$ to equal $\nu_{max}/2$. This smaller look-back distance roughly simulates the action of ``letting someone in". Without this change, a bottleneck would cause congestion in one lane while the other lane moved freely, since cars are rarely letting each other in. \\
 	
 	The bounds of the simulations also differ from the model described above, except for the regular two-lane NaSch case. All other scenarios have open boundary conditions with a regular in-flow of vehicles (further explanation later). Each vehicle's initial velocity is set to the $\nu_{max}$ of its starting cell. 
 	
-	\section{Mapping the simulation to real-world quantities}\label{sec:quantmap}
+	\subsection{Mapping the simulation to real-world quantities}\label{subsec:quantmap}
 	
-	It is important, before we begin, to establish the dimensions and scale of our simulations and how these quantities translate to the real world. The spatial dimension of our simulations is cells and the temporal dimension is time steps. Nagel and Schreckenberg argue that a single vehicle in a traffic jam takes up roughly 7.5m of the road, which would therefore be the length of a single cell. We can then use this length to convert typical speed limits (in South Africa) from km/h to cells/time-step. Since our cell length is in meters, it makes sense to convert each respective speed limit to m/s. If we then choose a single time step to represent a second of real world time we arrive at the following formula:
-	
+	It is important to establish the dimensions and scale of our simulations and how these quantities translate to the real world. The spatial dimension of our simulations is cells and the temporal dimension is time steps. Nagel and Schreckenberg argue that a single vehicle in a traffic jam takes up roughly 7.5m of the road, which would therefore be the length of a single cell. We can then use this length to convert typical speed limits (in South Africa) from km/h to cells/time-step. Since our cell length is in meters, it makes sense to convert each respective speed limit to m/s. If we then choose a single time step to represent a second of real world time we arrive at the formula
 	\[ \frac{v}{3.6} \frac{\text{m}}{\text{s}} \times \frac{1}{7.5} \frac{\text{cells}}{\text{m}} = \nu_{max} \text{ cells/time-step} \]
-	
-	The variable $v$ refers to the speed limit in km/h. 
-	This formula yields a result of roughly 1.48 cells/time-step. This value is too small to be feasible for the simulation, since the only integer velocities this would allow are zero and one (and perhaps also two if we round up). Let's rather choose a single time step to represent 2 seconds of real world time and adjust our formula accordingly. This gives us the following:
+	where the variable $v$ refers to the speed limit in km/h. 
+	This formula yields a result of roughly 1.48 cells/time-step for 40km/h. This value is too small to be feasible for the simulation, since the only integer velocities this would allow are zero and one (and perhaps also two if we round up). Let's rather choose a single time step to represent 2 seconds of real world time and adjust our formula accordingly. This gives us the following:
 	
 	\[ \frac{2v}{3.6} \frac{\text{m}}{\text{s}} \times \frac{1}{7.5} \frac{\text{cells}}{\text{m}} = \nu_{max} \text{ cells/time-step} \] \\
 	
@@ -68,9 +68,29 @@
 
 	For the sake of uniformity, the road was the same length for all simulations, this length being equal to 4000 cells (30km). This length was chosen because it is a realistic length for a stretch of freeway, but it is not so long that it causes the computation time for each time step to become too large. The value of $p$ was fixed to a realistic value of 0.16, as found by Knospe\cite{duepublico_mods_00005368}. \\
 	
+	\subsection{Observables}\label{subsec:obs}
+	
+	The end goal of this study is to measure how a bottleneck affects a two-lane road system, but to measure this effect, we must establish our observables. This study focuses on two main observables, the time-averaged traffic flow and the time-averaged number of stationary cars. When under periodic boundary conditions, both of these observables are influenced by the global density, $\rho$. The global density remains constant due to these boundary conditions and can exist as a tuning parameter for the system. The global density can be defined as 
+	\[ \rho = \frac{\text{number of vehicles}}{\text{number of cells}}. \]
+	The time-averaged traffic flow for a fixed point $i$ averaged over a time period $T$ can be expressed as 
+	\[ \bar{J}_T = \frac{1}{T} \sum^{T}_{t=0} \sum^{N}_{n=1} x_{n,i}(t) \]
+	where $x_{n,i} = 1$ if a car $n$ passed point $i$ during time-step $t$. In the simulations, $\bar{J}_T$ was measured by counting the amount of cars that crossed over the end of the lattice each time step.
+	The time-averaged number of stationary cars is 
+	\[ \bar{C}_T = \frac{1}{T} \sum^{T}_{t=0} \sum^{N}_{n=0} \delta_{\nu_n(t)} \]
+	where $\delta_{\nu_n(t)}$ is the Kronecker delta function of $\nu_{n}(t)$, the velocity of car $n$ at time step $t$. \\
+	When under open boundary conditions, the global density is not constant and thus only the initial density can be used to tune the system. In this case, it makes more sense to use the average in-flow of vehicles as a system parameter.
+	
 	\section{The regular two-lane model} \label{sec:regularNaSch}
 	
-	Our first order of business 
+	\subsection{Linking closed-system density to open-system in-flow}\label{subsec:closeopen}
+	
+	The regular two-lane model that was described in section 2.1 is a closed system with periodic boundary conditions. We start by examining this system with the purpose of fixing the in-flow parameter of the bottlenecked systems. Above some density threshold, the modelled system transitions from free flow to jammed traffic\cite{LubeckSchreckPhase}. Because we are interested in how a bottleneck creates traffic, we will choose a density below this threshold, but not so low that the traffic flow is unaffected by the bottleneck.
+	
+	How do we choose this density if we can only tune the initial density and the in-flow for the open system? We can use the closed system. For a particular choice of $\rho$ and $\nu_{max}$, the closed system should tend to some average traffic flow $\bar{J}$. We can then use this $\bar{J}$ value as the average in-flow for the open system with same $\rho$ and $\nu_{max}$ values.
+	
+	\subsection{Results}\label{subsec:regresults}
+	
+	
 	
 	\newpage
 	

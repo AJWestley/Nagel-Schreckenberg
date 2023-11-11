@@ -6,45 +6,45 @@ Database file #1: refs.bib
 Warning--empty school in duepublico_mods_00005368
 Warning--empty year in duepublico_mods_00005368
 Warning--empty journal in wright2013flow
-You've used 3 entries,
+You've used 4 entries,
             2118 wiz_defined-function locations,
-            513 strings with 4352 characters,
-and the built_in function-call counts, 777 in all, are:
-= -- 75
-> -- 27
+            521 strings with 4629 characters,
+and the built_in function-call counts, 1054 in all, are:
+= -- 101
+> -- 45
 < -- 0
-+ -- 12
-- -- 8
-* -- 53
-:= -- 142
-add.period$ -- 9
-call.type$ -- 3
-change.case$ -- 12
++ -- 19
+- -- 14
+* -- 73
+:= -- 194
+add.period$ -- 12
+call.type$ -- 4
+change.case$ -- 18
 chr.to.int$ -- 0
-cite$ -- 6
-duplicate$ -- 30
-empty$ -- 61
-format.name$ -- 8
-if$ -- 149
+cite$ -- 7
+duplicate$ -- 40
+empty$ -- 78
+format.name$ -- 14
+if$ -- 203
 int.to.chr$ -- 0
-int.to.str$ -- 3
-missing$ -- 2
-newline$ -- 18
-num.names$ -- 6
-pop$ -- 15
+int.to.str$ -- 4
+missing$ -- 3
+newline$ -- 23
+num.names$ -- 8
+pop$ -- 19
 preamble$ -- 1
-purify$ -- 10
+purify$ -- 15
 quote$ -- 0
-skip$ -- 20
+skip$ -- 28
 stack$ -- 0
-substring$ -- 47
-swap$ -- 2
+substring$ -- 52
+swap$ -- 3
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 12
+type$ -- 16
 warning$ -- 3
-while$ -- 8
-width$ -- 4
-write$ -- 31
+while$ -- 10
+width$ -- 5
+write$ -- 42
 (There were 3 warnings)

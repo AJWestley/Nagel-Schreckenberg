@@ -92,7 +92,7 @@ void bottleneck_NaSch(char *filename, int length, int vmax, float p, float inflo
 
 	struct Cell **road = create_road(length, vmax);
 	
-	int barrier_length = 200;
+	int barrier_length = 800;
 	int barrier_pos = length - barrier_length - 1;
 	add_barrier(road, barrier_pos, barrier_length, length);
 
@@ -117,7 +117,7 @@ void bottleneck_speedlimit_NaSch(char *filename, int length, int vmax, float p, 
 
 	struct Cell **road = create_road(length, vmax);
 	
-	int barrier_length = 200;
+	int barrier_length = 800;
 	int barrier_pos = length - barrier_length - 1;
 	int sign_pos = barrier_pos - sign_distance - 1, sign_length = barrier_length + sign_distance;
 	add_barrier(road, barrier_pos, barrier_length, length);

@@ -6,6 +6,13 @@ Wolfgang Knospe~Dr.
   observations}.
 \newblock PhD thesis.
 
+\bibitem{LubeckSchreckPhase}
+S.~Lubeck, Michael Schreckenberg, and K.~Usadel.
+\newblock Density fluctuations and phase transition in the nagel-schreckenberg
+  traffic flow model.
+\newblock {\em Physical review. E, Statistical physics, plasmas, fluids, and
+  related interdisciplinary topics}, 57, 09 1997.
+
 \bibitem{nagel1992cellular}
 Kai Nagel and Michael Schreckenberg.
 \newblock A cellular automaton model for freeway traffic.
