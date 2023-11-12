@@ -1,6 +1,7 @@
 \documentclass[11pt]{article}
 \usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
 \usepackage{amsmath}
+\usepackage{graphicx}
 \usepackage{titlesec}
 \titlelabel{\thetitle.\quad}
 
@@ -16,7 +17,7 @@
 	
 	\section{Introduction} \label{sec:intro}
 	
-	The Nagel--Schreckenberg (NaSch) model is a simple cellular automaton model for single-lane traffic flow. It was introduced in 1992 by Kai Nagel and Michael Schreckenberg \cite{nagel1992cellular}, with the purpose of stochastically simulating the human element of traffic. In this model, a road is treated as a discrete lattice of cells with periodic boundary conditions and some initial global density $\rho$. Each cell can contain no more than one vehicle. Each vehicle has an integer velocity of $0 \leq \nu \leq \nu_{max}$, and travels along the lattice according to the following four simple rules: 
+	The Nagel--Schreckenberg (NaSch) model is a simple cellular automaton model for single-lane traffic flow. It was introduced in 1992 by Kai Nagel and Michael Schreckenberg \cite{nagel1992cellular}, with the purpose of stochastically simulating the human element of traffic. In this model, a road is treated as a discrete lattice of cells with periodic boundary conditions and some initial global density $\rho$. Each cell can contain no more than one vehicle. Each vehicle has an integer velocity of $0 \leq \nu \leq \nu_{max}$, and travels along the road according to the following four simple rules: 
 	
 	\begin{enumerate}
 		\item \textbf{Acceleration}: if the velocity $\nu$ of a vehicle is lower than $\nu_{max}$, its velocity is increased by one. $\nu \rightarrow \nu + 1$.
@@ -36,7 +37,7 @@
 	
 	While the single-lane model has proven effective at modelling many real-world scenarios, the two lane variation is more effective at simulating multi-lane systems such as highways, which are the point of interest in this study.\\ 
 	
-	In this report, I make use of the two-lane NaSch model to study the effect that bottlenecks have on a road system. Firstly, the regular model is examined. The results from this examination are then used to fix the parameters of the next simulations. A bottleneck is then added to the road and two variations of this scenarios are examined: a bottleneck on an otherwise unaltered road, a reduced speed limit before a bottleneck.
+	In this report, I make use of the two-lane NaSch model to study the effect that bottlenecks have on a road system. Firstly, the regular model is examined. The results from this examination are then used to fix the parameters of the next simulations. A bottleneck is then added to the road and two variations of this scenarios are examined: a bottleneck on an otherwise unaltered road, a reduced speed limit before a bottleneck.\\
 	
 	\section{The simulations}\label{sec:sims}
 	
@@ -46,7 +47,7 @@
 	
 	These Markov chain Monte Carlo simulations were run using C and all random number generation was performed using the built-in drand48 function. The simulations make use of the two-lane NaSch model described above, but with one minor change to the \textbf{safety} rule. Instead of $gap_{lookback} = \nu_{max}$, we chose $gap_{lookback}$ to equal $\nu_{max}/2$. This smaller look-back distance roughly simulates the action of ``letting someone in". Without this change, a bottleneck would cause congestion in one lane while the other lane moved freely, since cars are rarely letting each other in. \\
 	
-	The bounds of the simulations also differ from the model described above, except for the regular two-lane NaSch case. All other scenarios have open boundary conditions with a regular in-flow of vehicles (further explanation later). Each vehicle's initial velocity is set to the $\nu_{max}$ of its starting cell. 
+	The bounds of the simulations also differ from the model described in section \ref{sec:intro}, except for the regular two-lane NaSch case. All other scenarios have open boundary conditions with a regular in-flow of vehicles (further explanation later). Each vehicle's initial velocity is set to the $\nu_{max}$ of its starting cell. \\
 	
 	\subsection{Mapping the simulation to real-world quantities}\label{subsec:quantmap}
 	
@@ -74,21 +75,83 @@
 	\[ \rho = \frac{\text{number of vehicles}}{\text{number of cells}}. \]
 	The time-averaged traffic flow for a fixed point $i$ averaged over a time period $T$ can be expressed as 
 	\[ \bar{J}_T = \frac{1}{T} \sum^{T}_{t=0} \sum^{N}_{n=1} x_{n,i}(t) \]
-	where $x_{n,i} = 1$ if a car $n$ passed point $i$ during time-step $t$. In the simulations, $\bar{J}_T$ was measured by counting the amount of cars that crossed over the end of the lattice each time step.
+	where $x_{n,i} = 1$ if a car $n$ passed point $i$ during time-step $t$. In the simulations, $\bar{J}_T$ was measured by counting the amount of cars that crossed over the end of the road each time step.
 	The time-averaged number of stationary cars is 
 	\[ \bar{C}_T = \frac{1}{T} \sum^{T}_{t=0} \sum^{N}_{n=0} \delta_{\nu_n(t)} \]
 	where $\delta_{\nu_n(t)}$ is the Kronecker delta function of $\nu_{n}(t)$, the velocity of car $n$ at time step $t$. \\
-	When under open boundary conditions, the global density is not constant and thus only the initial density can be used to tune the system. In this case, it makes more sense to use the average in-flow of vehicles as a system parameter.
+	When under open boundary conditions, the global density is not constant and thus only the initial density can be used to tune the system. In this case, it makes more sense to use the average in-flow of vehicles, $\bar{J}_{in}$ as a system parameter.\\
 	
 	\section{The regular two-lane model} \label{sec:regularNaSch}
 	
 	\subsection{Linking closed-system density to open-system in-flow}\label{subsec:closeopen}
 	
-	The regular two-lane model that was described in section 2.1 is a closed system with periodic boundary conditions. We start by examining this system with the purpose of fixing the in-flow parameter of the bottlenecked systems. Above some density threshold, the modelled system transitions from free flow to jammed traffic\cite{LubeckSchreckPhase}. Because we are interested in how a bottleneck creates traffic, we will choose a density below this threshold, but not so low that the traffic flow is unaffected by the bottleneck.
+	The regular two-lane model that was described in section \ref{subsec:basesim} is a closed system with periodic boundary conditions. We start by examining this system with the purpose of fixing $\bar{J}_{in}$ for the bottlenecked systems. Above some density threshold, the modelled system transitions from free flow to jammed traffic\cite{LubeckSchreckPhase}. Because we are interested in how a bottleneck creates traffic, we will choose a density below this threshold, but not so low that the traffic flow is unaffected by the bottleneck.
 	
-	How do we choose this density if we can only tune the initial density and the in-flow for the open system? We can use the closed system. For a particular choice of $\rho$ and $\nu_{max}$, the closed system should tend to some average traffic flow $\bar{J}$. We can then use this $\bar{J}$ value as the average in-flow for the open system with same $\rho$ and $\nu_{max}$ values.
+	How do we choose this density if we can only tune $\bar{J}_{in}$ and the initial density for the open system? We can use the closed system. For a particular choice of $\rho$ and $\nu_{max}$, the closed system should tend to some average traffic flow $\bar{J}_T$ due to the central limit theorem. We can then use this $\bar{J}_T$ value as the $\bar{J}_{in}$ value for the open system with same $\rho$ and $\nu_{max}$ values, as if we were to unwrap the road from the closed system and attach it to the beginning of the road in the open system.\\
 	
-	\subsection{Results}\label{subsec:regresults}
+	\subsection{Choosing $\rho$ and $\bar{J}_{in}$}\label{subsec:regdensity}
+	
+	We ran the simulation for 100000 time steps with all the speed limits discussed earlier in order to examine how the system behaves for different values of $\rho$ and $\nu_{max}$. The $\rho$ values were chosen to correspond to $n$ cells per vehicle, where $n = 2, 3, ..., 9$. The system was initialised with the velocities of all vehicles set to $\nu_{max}$ and $(n-1)$ empty cells between each subsequent vehicle.\\
+	
+	\begin{center}
+		\includegraphics[scale=0.46]{Figures/Regular_NaSch.png}\\
+		Fig.1.	
+		The effect of $\rho$ on $\bar{C}_T$ (left) and $\bar{J}_T$ (right) for different values of $\nu_{max}$ over 100000 time steps. The error bars have been scaled up to 100 and 15 time the standard deviation, respectively.\\
+	\end{center}
+
+	The average number of stationary vehicles, $\bar{C}_T$, is near zero for all $\nu_{max}$ values when $\rho \leq 0.2$ and as $\rho$ increases, more speed limits begin to yield $\bar{C}_T$ values much larger than zero as spontaneous traffic jams become increasingly likely to occur. These spontaneous jams would skew our data when examining the bottleneck scenario, since these would create jams that aren't caused by the bottleneck itself. We are only interested in those values of $\rho \leq 0.2$. 
+	
+	\begin{center}
+		\includegraphics[scale=0.46]{Figures/Examining_rho.png}\\
+		Fig.2.	
+		A closer look at the $\rho$ values $\leq 0.2$. Note that, even though this was not visible on a larger scale, $\bar{C}_T$ is still greater than zero for all the examined $\rho$ values when $\nu_{max}=3$. The error bars have been scaled up to 3 and 15 times the standard deviation, respectively.\\
+	\end{center}
+
+	All these values of $\rho$ yield $\bar{C}_T$ values lower than 0.1 for all speed limits, so they should not skew our data when we examine the bottleneck scenario. If our selected density is too low, the roadway will be largely unaffected by a bottleneck, which is a trivial case we are not interested in examining. To this end, we should choose the largest of these $\rho$ values, 0.2.
+	
+	Now that we have made our choice of $\rho$, we can find the associated $\bar{J}_T$ values to use as our $\bar{J}_{in}$ values for the bottleneck systems. Luckily, these have already been plotted in Fig.1 and Fig.2. The $\bar{J}_T$ values for $\rho = 0.2$ are:\\
+	
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|c|c|}
+			\hline
+			$\nu_{max}$	&	3	&	4	&	6	&	7	&	9	\\
+			\hline
+			$\bar{J}_T$	&$1.130\pm0.003$  &$1.53\pm0.003$	&$2.328\pm0.004$	&$2.729\pm0.004$	&$3.531\pm0.005$\\
+			\hline
+		\end{tabular}
+	\end{center}
+	
+	Now we can tune the $\bar{J}_{in}$ parameters of the bottleneck system for each respective $\nu_{max}$.\\
+	
+	\newpage
+	
+	\section{The bottleneck model}\label{sec:regbottle}
+	
+	\subsection{The simulation}\label{subsec:bottlesim}
+	
+	Now that all our outlying tuning parameters have been chosen, we can move onto the bottleneck scenario. As discussed earlier, the bottleneck simulation has open boundary conditions with a regular in-flow of vehicles according to the $\bar{J}_{in}$ values that we determined in section \ref{subsec:regdensity}. During each time step of this simulation an amount of vehicles is added to the beginning of the road, all with a velocity of $\nu_{max}$. The amount of vehicles to be added is determined by a Poisson distribution with a mean of $\bar{J}_{in}$ (for the given $\nu_{max}$). If a car crosses over the end of the road, it is discarded into the aether and measured as part of the out-flow $\bar{J}_T$. For the last 800 sites of the road (6km), the right-most cell is occupied by an immobile barrier, thus causing the right lane to be closed for that stretch. Which lanes are left and right have not been established for these simulations, but this is just semantics (and to close the left lane just wouldn't be right). The road starts with no cars and as such the measured out-flow for a period at the beginning would be zero, due to the cars taking time to travel along the road. The simulations are only run for $\nu_{max}=7$ and $\nu_{max}=9$ (100km/h and 120km/h), since these are common speed limits for a freeway.\\
+	
+	\subsection{The effect of the bottleneck}\label{subsec:effbot}
+	
+	The bottleneck simulation was run for 100000 time steps. Fig.3 shows an average of over 1750 stationary cars by the end of the simulation for both speed limits. What is notable is that the average number of stationary cars is slightly higher when the speed limit is 100km/h, however, it takes longer to reach this average. This is likely due to cars taking longer to reach the end causing the congestion to build up slower. As would be expected, the out-flow is lower when the speed limit is lower, as was the case in the non-bottlenecked model.\\
+	
+	\begin{center}
+		\includegraphics[scale=0.46]{Figures/Plain_bottleneck_run1.png}\\
+		Fig.3.	
+		The running averages for the number of stationary cars(left) and the out-flow(right) over 10000 time steps for $\nu_{max}=7$ (100km/h) and $\nu_{max}=9$ (120km/h). \\
+	\end{center}
+
+	For context, it should be noted that the 100000 time steps are equivalent to 55 hours, and most highways don't maintain a constant in-flow of traffic for over two days. For this reason, it would be helpful to examine the first few hours, perhaps similar to a morning rush hour. As can be seen in Fig.4, the lower speed limit manages to hold a lower average congestion throughout a 4 hour period. but the out-flow remains lower as well.\\
+	
+	\begin{center}
+		\includegraphics[scale=0.46]{Figures/Plain_bottleneck_run1_4hour.png}\\
+		Fig.4.	
+		The running averages for the number of stationary cars(left) and the out-flow(right) over 7200 time steps (4 hours) for $\nu_{max}=7$ (100km/h) and $\nu_{max}=9$ (120km/h). Note the flat part at the beginning of both plots where the cars had not reached the barrier or end of the road yet. \\
+	\end{center}
+
+	\section{Reducing the speed limit}\label{sec:limit}
+	
+	\subsection{Reduce how?}
 	
 	
 	
