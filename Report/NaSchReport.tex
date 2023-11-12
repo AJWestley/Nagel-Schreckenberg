@@ -11,13 +11,13 @@
 
 \begin{document}
 	
-	\maketitle 
+	\maketitle
 	
 	\hfill \break
 	
 	\section{Introduction} \label{sec:intro}
 	
-	The Nagel--Schreckenberg (NaSch) model is a simple cellular automaton model for single-lane traffic flow. It was introduced in 1992 by Kai Nagel and Michael Schreckenberg \cite{nagel1992cellular}, with the purpose of stochastically simulating the human element of traffic. In this model, a road is treated as a discrete lattice of cells with periodic boundary conditions and some initial global density $\rho$. Each cell can contain no more than one vehicle. Each vehicle has an integer velocity of $0 \leq \nu \leq \nu_{max}$, and travels along the road according to the following four simple rules: 
+	The Nagel--Schreckenberg (NaSch) model is a simple cellular automaton model for single-lane traffic flow. It was introduced in 1992 by Kai Nagel and Michael Schreckenberg \cite{nagel1992cellular}, with the purpose of stochastically simulating the human element of traffic. In this model, a road is treated as a discrete lattice of cells with periodic boundary conditions and some initial global density $\rho$. Each cell can contain no more than one vehicle. Each vehicle has an integer velocity of $0 \leq \nu \leq \nu_{max}$ and travels along the road according to the following four simple rules.
 	
 	\begin{enumerate}
 		\item \textbf{Acceleration}: if the velocity $\nu$ of a vehicle is lower than $\nu_{max}$, its velocity is increased by one. $\nu \rightarrow \nu + 1$.
@@ -28,78 +28,78 @@
 	
 	The power of the NaSch model comes from how its relative simplicity can reproduce known properties of traffic flow. Just from these rules, the model shows traffic jams as emergent properties of the individual interactions between nearby cars. \\
 	
-	The basic NaSch model has been explored and adapted in many ways in order to better model specific scenarios. One of these many extensions is the two-lane variation. This is similar to two parallel, single-lane NaSch models, except there are some additional rules which govern how the cars change lanes\cite{wright2013flow}. These rules are as follows:
+	The basic NaSch model has been explored and adapted in many ways in order to better model specific scenarios. One of these many extensions is the two-lane variation. This is similar to two parallel, single-lane NaSch models, except there are some additional rules which govern how the cars change lanes \cite{wright2013flow}. These rules are as follows.
 	
 	\begin{enumerate}
 		\item \textbf{Incentive}: if the velocity of vehicle $i$ is more than or equal to its distance to vehicle $j$ ahead ($\nu_i \geq j-i$), it is more beneficial to change lanes and remain at velocity $\nu_i$.
-		\item \textbf{Safety}: for a vehicle $i$ to transfer to the adjacent lane, there must be no other vehicles in the region [$i-gap_{behind}, i+gap_{ahead}]$ where $gap_{behind} = \nu_{max}$ and $gap_{ahead} = \nu_i$.
+		\item \textbf{Safety}: for a vehicle $i$ to transfer to the adjacent lane, there must be no other vehicles in the region [$i-gap_{behind}, i+gap_{ahead}]$, where $gap_{behind} = \nu_{max}$ and $gap_{ahead} = \nu_i$.
 	\end{enumerate}
 	
-	While the single-lane model has proven effective at modelling many real-world scenarios, the two lane variation is more effective at simulating multi-lane systems such as highways, which are the point of interest in this study.\\ 
+	While the single-lane model has proven effective at modelling many real-world scenarios, the two-lane variation is more effective at simulating multi-lane systems such as highways, which are the point of interest in this study.\\
 	
-	In this report, I make use of the two-lane NaSch model to study the effect that bottlenecks have on a road system. Firstly, the regular model is examined. The results from this examination are then used to fix the parameters of the next simulations. A bottleneck is then added to the road and two variations of this scenarios are examined: a bottleneck on an otherwise unaltered road, a reduced speed limit before a bottleneck.\\
+	In this report, I make use of the two-lane NaSch model to study the effect that bottlenecks have on a road system. Firstly, the regular model is examined. The results from this examination are then used to fix the parameters of the next simulations. A bottleneck is then added to the road and two variations of this scenarios are examined: a bottleneck on an otherwise unaltered road and a reduced speed limit before a bottleneck.\\
 	
 	\section{The simulations}\label{sec:sims}
 	
 	\subsection{The base simulation}\label{subsec:basesim}
 	
-	There are three scenarios of interest in this study: free-flow traffic, a road bottleneck, and a reduced speed limit leading up to a bottleneck. Each scenario has an accompanying simulation, however each simulation differs from the others only slightly. Here we give the simulations a unified description, leaving most characteristics that are specific to a single simulation for its respective section.\\
+	There are three scenarios of interest in this study: free-flow traffic, a road bottleneck, and a reduced speed limit leading up to a bottleneck. Each scenario has an accompanying simulation; however, each simulation differs from the others only slightly. Here we give the simulations a unified description, leaving most characteristics that are specific to a single simulation for its respective section.\\
 	
-	These Markov chain Monte Carlo simulations were run using C and all random number generation was performed using the built-in drand48 function. The simulations make use of the two-lane NaSch model described above, but with one minor change to the \textbf{safety} rule. Instead of $gap_{lookback} = \nu_{max}$, we chose $gap_{lookback}$ to equal $\nu_{max}/2$. This smaller look-back distance roughly simulates the action of ``letting someone in". Without this change, a bottleneck would cause congestion in one lane while the other lane moved freely, since cars are rarely letting each other in. \\
+	These Markov chain Monte Carlo simulations were run using C, and all random number generation was performed using the built-in drand48 function. The simulations make use of the two-lane NaSch model described above but with one minor change to the \textbf{safety} rule. Instead of $gap_{lookback} = \nu_{max}$, we chose $gap_{lookback}$ to equal $\nu_{max}/2$. This smaller look-back distance roughly simulates the action of ``letting someone in''. Without this change, a bottleneck would cause congestion in one lane while the other lane moved freely, since cars are rarely letting each other in. \\
 	
-	The bounds of the simulations also differ from the model described in section \ref{sec:intro}, except for the regular two-lane NaSch case. All other scenarios have open boundary conditions with a regular in-flow of vehicles (further explanation later). Each vehicle's initial velocity is set to the $\nu_{max}$ of its starting cell. \\
+	The bounds of the simulations also differ from the model described in section \ref{sec:intro}, except for the regular two-lane NaSch case. All other scenarios have open boundary conditions with a regular inflow of vehicles (further explanation later). Each vehicle's initial velocity is set to the $\nu_{max}$ of its starting cell. \\
 	
 	\subsection{Mapping the simulation to real-world quantities}\label{subsec:quantmap}
 	
-	It is important to establish the dimensions and scale of our simulations and how these quantities translate to the real world. The spatial dimension of our simulations is cells and the temporal dimension is time steps. Nagel and Schreckenberg argue that a single vehicle in a traffic jam takes up roughly 7.5m of the road, which would therefore be the length of a single cell. We can then use this length to convert typical speed limits (in South Africa) from km/h to cells/time-step. Since our cell length is in meters, it makes sense to convert each respective speed limit to m/s. If we then choose a single time step to represent a second of real world time we arrive at the formula
-	\[ \frac{v}{3.6} \frac{\text{m}}{\text{s}} \times \frac{1}{7.5} \frac{\text{cells}}{\text{m}} = \nu_{max} \text{ cells/time-step} \]
-	where the variable $v$ refers to the speed limit in km/h. 
-	This formula yields a result of roughly 1.48 cells/time-step for 40km/h. This value is too small to be feasible for the simulation, since the only integer velocities this would allow are zero and one (and perhaps also two if we round up). Let's rather choose a single time step to represent 2 seconds of real world time and adjust our formula accordingly. This gives us the following:
+	It is important to establish the dimensions and scale of our simulations and how these quantities translate to the real world. The spatial dimension of our simulations is cells and the temporal dimension is time steps. Nagel and Schreckenberg argue that a single vehicle in a traffic jam takes up roughly 7.5\,m of the road, which would therefore be the length of a single cell. We can then use this length to convert typical speed limits (in South Africa) from km/h to cells/time step. Since our cell length is in metres, it makes sense to convert each respective speed limit to m/s. If we then choose a single time step to represent a second of real-world time we arrive at the formula
+	\[ \frac{v}{3.6} \frac{\text{m}}{\text{s}} \times \frac{1}{7.5} \frac{\text{cells}}{\text{m}} = \nu_{max} \text{ cells/time-step} \],
+	where the variable $v$ refers to the speed limit in km/h.
+	This formula yields a result of roughly 1.48 cells/time step for 40\,km/h. This value is too small to be feasible for the simulation, since the only integer velocities this would allow are zero and one (and perhaps also two if we round up). Let us rather choose a single time step to represent 2 seconds of real-world time and adjust our formula accordingly. This gives us the following:
 	
-	\[ \frac{2v}{3.6} \frac{\text{m}}{\text{s}} \times \frac{1}{7.5} \frac{\text{cells}}{\text{m}} = \nu_{max} \text{ cells/time-step} \] \\
+	\[ \frac{2v}{3.6} \frac{\text{m}}{\text{s}} \times \frac{1}{7.5} \frac{\text{cells}}{\text{m}} = \nu_{max} \text{ cells/time-step} \]. \\
 	
 	From this formula, we get the following integer values for $\nu_{max}$:
 	\begin{align*}
-		40 \text{ km/h} &\approx 3 \text{ cells/time-step} \\
-		60 \text{ km/h} &\approx 4 \text{ cells/time-step} \\
-		80 \text{ km/h} &\approx 6 \text{ cells/time-step} \\
-		100 \text{ km/h} &\approx 7 \text{ cells/time-step} \\
-		120 \text{ km/h} &\approx 9 \text{ cells/time-step} \\
+		40 \text{ km/h} &\approx 3 \text{ cells/time-step}, \\
+		60 \text{ km/h} &\approx 4 \text{ cells/time-step}, \\
+		80 \text{ km/h} &\approx 6 \text{ cells/time-step}, \\
+		100 \text{ km/h} &\approx 7 \text{ cells/time-step}, \\
+		120 \text{ km/h} &\approx 9 \text{ cells/time-step}. \\
 	\end{align*}
 
-	For the sake of uniformity, the road was the same length for all simulations, this length being equal to 4000 cells (30km). This length was chosen because it is a realistic length for a stretch of freeway, but it is not so long that it causes the computation time for each time step to become too large. The value of $p$ was fixed to a realistic value of 0.16, as found by Knospe\cite{duepublico_mods_00005368}. \\
+	For the sake of uniformity, the road was the same length for all simulations, this length being equal to 4000 cells (30km). This length was chosen because it is a realistic length for a stretch of highway, but it is not so long that it causes the computation time for each time step to become too large. The value of $p$ was fixed to a realistic value of 0.16, as found by Knospe \cite{duepublico_mods_00005368}. \\
 	
 	\subsection{Observables}\label{subsec:obs}
 	
-	The end goal of this study is to measure how a bottleneck affects a two-lane road system, but to measure this effect, we must establish our observables. This study focuses on two main observables, the time-averaged traffic flow and the time-averaged number of stationary cars. When under periodic boundary conditions, both of these observables are influenced by the global density, $\rho$. The global density remains constant due to these boundary conditions and can exist as a tuning parameter for the system. The global density can be defined as 
+	The end goal of this study is to measure how a bottleneck affects a two-lane road system, but to measure this effect, we must establish our observables. This study focuses on two main observables, the time-averaged traffic flow and the time-averaged number of stationary cars. When under periodic boundary conditions, both of these observables are influenced by the global density $\rho$. The global density remains constant due to these boundary conditions and can exist as a tuning parameter for the system. The global density can be defined as
 	\[ \rho = \frac{\text{number of vehicles}}{\text{number of cells}}. \]
-	The time-averaged traffic flow for a fixed point $i$ averaged over a time period $T$ can be expressed as 
-	\[ \bar{J}_T = \frac{1}{T} \sum^{T}_{t=0} \sum^{N}_{n=1} x_{n,i}(t) \]
-	where $x_{n,i} = 1$ if a car $n$ passed point $i$ during time-step $t$. In the simulations, $\bar{J}_T$ was measured by counting the amount of cars that crossed over the end of the road each time step.
-	The time-averaged number of stationary cars is 
-	\[ \bar{C}_T = \frac{1}{T} \sum^{T}_{t=0} \sum^{N}_{n=0} \delta_{\nu_n(t)} \]
+	The time-averaged traffic flow for a fixed point $i$ averaged over a time period $T$ can be expressed as
+	\[ \bar{J}_T = \frac{1}{T} \sum^{T}_{t=0} \sum^{N}_{n=1} x_{n,i}(t) \],
+	where $x_{n,i} = 1$ if a car $n$ passed point $i$ during time step $t$. In the simulations, $\bar{J}_T$ was measured by counting the amount of cars that crossed over the end of the road each time step.
+	The time-averaged number of stationary cars is
+	\[ \bar{C}_T = \frac{1}{T} \sum^{T}_{t=0} \sum^{N}_{n=0} \delta_{\nu_n(t)} \],
 	where $\delta_{\nu_n(t)}$ is the Kronecker delta function of $\nu_{n}(t)$, the velocity of car $n$ at time step $t$. \\
-	When under open boundary conditions, the global density is not constant and thus only the initial density can be used to tune the system. In this case, it makes more sense to use the average in-flow of vehicles, $\bar{J}_{in}$ as a system parameter.\\
+	When under open boundary conditions, the global density is not constant, and thus only the initial density can be used to tune the system. In this case, it makes more sense to use the average inflow of vehicles $\bar{J}_{in}$ as a system parameter.\\
 	
 	\section{The regular two-lane model} \label{sec:regularNaSch}
 	
-	\subsection{Linking closed-system density to open-system in-flow}\label{subsec:closeopen}
+	\subsection{Linking closed-system density to open-system inflow}\label{subsec:closeopen}
 	
-	The regular two-lane model that was described in section \ref{subsec:basesim} is a closed system with periodic boundary conditions. We start by examining this system with the purpose of fixing $\bar{J}_{in}$ for the bottlenecked systems. Above some density threshold, the modelled system transitions from free flow to jammed traffic\cite{LubeckSchreckPhase}. Because we are interested in how a bottleneck creates traffic, we will choose a density below this threshold, but not so low that the traffic flow is unaffected by the bottleneck.
+	The regular two-lane model that was described in section \ref{subsec:basesim} is a closed system with periodic boundary conditions. We start by examining this system with the purpose of fixing $\bar{J}_{in}$ for the bottlenecked systems. Above some density threshold, the modelled system transitions from free flow to jammed traffic \cite{LubeckSchreckPhase}. Because we are interested in how a bottleneck creates traffic, we will choose a density below this threshold but not so low that the traffic flow is unaffected by the bottleneck.
 	
 	How do we choose this density if we can only tune $\bar{J}_{in}$ and the initial density for the open system? We can use the closed system. For a particular choice of $\rho$ and $\nu_{max}$, the closed system should tend to some average traffic flow $\bar{J}_T$ due to the central limit theorem. We can then use this $\bar{J}_T$ value as the $\bar{J}_{in}$ value for the open system with same $\rho$ and $\nu_{max}$ values, as if we were to unwrap the road from the closed system and attach it to the beginning of the road in the open system.\\
 	
 	\subsection{Choosing $\rho$ and $\bar{J}_{in}$}\label{subsec:regdensity}
 	
-	We ran the simulation for 100000 time steps with all the speed limits discussed earlier in order to examine how the system behaves for different values of $\rho$ and $\nu_{max}$. The $\rho$ values were chosen to correspond to $n$ cells per vehicle, where $n = 2, 3, ..., 9$. The system was initialised with the velocities of all vehicles set to $\nu_{max}$ and $(n-1)$ empty cells between each subsequent vehicle.\\
+	We ran the simulation for 100\,000 time steps with all the speed limits discussed earlier in order to examine how the system behaves for different values of $\rho$ and $\nu_{max}$. The $\rho$ values were chosen to correspond to $n$ cells per vehicle, where $n = 2, 3, ..., 9$. The system was initialised with the velocities of all vehicles set to $\nu_{max}$ and $(n-1)$ empty cells between each subsequent vehicle.\\
 	
 	\begin{center}
 		\includegraphics[scale=0.46]{Figures/Regular_NaSch.png}\\
 		Fig.1.	
-		The effect of $\rho$ on $\bar{C}_T$ (left) and $\bar{J}_T$ (right) for different values of $\nu_{max}$ over 100000 time steps. The error bars have been scaled up to 100 and 15 time the standard deviation, respectively.\\
+		The effect of $\rho$ on $\bar{C}_T$ (left) and $\bar{J}_T$ (right) for different values of $\nu_{max}$ over 100\,000 time steps. The error bars have been scaled up to 100 and 15 times the standard deviation, respectively.\\
 	\end{center}
 
-	The average number of stationary vehicles, $\bar{C}_T$, is near zero for all $\nu_{max}$ values when $\rho \leq 0.2$ and as $\rho$ increases, more speed limits begin to yield $\bar{C}_T$ values much larger than zero as spontaneous traffic jams become increasingly likely to occur. These spontaneous jams would skew our data when examining the bottleneck scenario, since these would create jams that aren't caused by the bottleneck itself. We are only interested in those values of $\rho \leq 0.2$. 
+	The average number of stationary vehicles $\bar{C}_T$ is near zero for all $\nu_{max}$ values when $\rho \leq 0.2$, and as $\rho$ increases, more speed limits begin to yield $\bar{C}_T$ values much larger than zero as spontaneous traffic jams become increasingly likely to occur. These spontaneous jams would skew our data when examining the bottleneck scenario, since these would create jams that are not caused by the bottleneck itself. We are only interested in those values of $\rho \leq 0.2$.
 	
 	\begin{center}
 		\includegraphics[scale=0.46]{Figures/Examining_rho.png}\\
@@ -109,7 +109,7 @@
 
 	All these values of $\rho$ yield $\bar{C}_T$ values lower than 0.1 for all speed limits, so they should not skew our data when we examine the bottleneck scenario. If our selected density is too low, the roadway will be largely unaffected by a bottleneck, which is a trivial case we are not interested in examining. To this end, we should choose the largest of these $\rho$ values, 0.2.
 	
-	Now that we have made our choice of $\rho$, we can find the associated $\bar{J}_T$ values to use as our $\bar{J}_{in}$ values for the bottleneck systems. Luckily, these have already been plotted in Fig.1 and Fig.2. The $\bar{J}_T$ values for $\rho = 0.2$ are:\\
+	Now that we have made our choice of $\rho$, we can find the associated $\bar{J}_T$ values to use as our $\bar{J}_{in}$ values for the bottleneck systems. Luckily, these have already been plotted in Fig.1 and Fig.2. The $\bar{J}_T$ values for $\rho = 0.2$ are\\
 	
 	\begin{center}
 		\begin{tabular}{|c|c|c|c|c|c|}
@@ -129,66 +129,66 @@
 	
 	\subsection{The simulation}\label{subsec:bottlesim}
 	
-	Now that all our outlying tuning parameters have been chosen, we can move onto the bottleneck scenario. As discussed earlier, the bottleneck simulation has open boundary conditions with a regular in-flow of vehicles according to the $\bar{J}_{in}$ values that we determined in section \ref{subsec:regdensity}. During each time step of this simulation an amount of vehicles is added to the beginning of the road, all with a velocity of $\nu_{max}$. The amount of vehicles to be added is determined by a Poisson distribution with a mean of $\bar{J}_{in}$ (for the given $\nu_{max}$). If a car crosses over the end of the road, it is discarded into the aether and measured as part of the out-flow $\bar{J}_T$. For the last 800 sites of the road (6km), the right-most cell is occupied by an immobile barrier, thus causing the right lane to be closed for that stretch. Which lanes are left and right have not been established for these simulations, but this is just semantics (and to close the left lane just wouldn't be right). The road starts with no cars and as such the measured out-flow for a period at the beginning would be zero, due to the cars taking time to travel along the road. The simulations are only run for $\nu_{max}=7$ and $\nu_{max}=9$ (100km/h and 120km/h), since these are common speed limits for a freeway.\\
+	Now that all our outlying tuning parameters have been chosen, we can move onto the bottleneck scenario. As discussed earlier, the bottleneck simulation has open boundary conditions with a regular inflow of vehicles according to the $\bar{J}_{in}$ values that we determined in section \ref{subsec:regdensity}. During each time step of this simulation, an amount of vehicles is added to the beginning of the road, all with a velocity of $\nu_{max}$. The amount of vehicles to be added is determined by a Poisson distribution with a mean of $\bar{J}_{in}$ (for the given $\nu_{max}$). If a car crosses over the end of the road, it is discarded into the ether and measured as part of the outflow $\bar{J}_T$. For the last 800 sites of the road (6\,km), the right-most cell is occupied by an immobile barrier, thus causing the right lane to be closed for that stretch. Which lanes are left and right have not been established for these simulations, but this is just semantics (and to close the left lane just would not be right). The road starts with no cars and as such the measured outflow for a period at the beginning would be zero due to the cars taking time to travel along the road. The simulations are only run for $\nu_{max}=7$ and $\nu_{max}=9$ (100\,km/h and 120\,km/h), since these are common speed limits for a highway.\\
 	
 	\subsection{The effect of the bottleneck}\label{subsec:effbot}
 	
-	The bottleneck simulation was run for 100000 time steps. Fig.3 shows an average of over 1750 stationary cars by the end of the simulation for both speed limits. What is notable is that the average number of stationary cars is slightly higher when the speed limit is 100km/h, however, it takes longer to reach this average. This is likely due to cars taking longer to reach the end causing the congestion to build up slower. As would be expected, the out-flow is lower when the speed limit is lower, as was the case in the non-bottlenecked model.\\
+	The bottleneck simulation was run for 100\,000 time steps. Fig.3 shows an average of over 1750 stationary cars by the end of the simulation for both speed limits. What is notable is that the average number of stationary cars is slightly higher when the speed limit is 100\,km/h; however, it takes longer to reach this average. This is likely due to cars taking longer to reach the end, causing the congestion to build up slower. As would be expected, the outflow is lower when the speed limit is lower, as was the case in the non-bottlenecked model.\\
 	
 	\begin{center}
 		\includegraphics[scale=0.46]{Figures/Plain_bottleneck.png}\\
 		Fig.3.	
-		The number of stationary cars (left) and the mean out-flow(right). Run for 100000 time steps with $\nu_{max}=7$ (100km/h) and $\nu_{max}=9$ (120km/h). \\
+		The number of stationary cars (left) and the mean outflow (right), run for 100\,000 time steps with $\nu_{max}=7$ (100\,km/h) and $\nu_{max}=9$ (120\,km/h). \\
 	\end{center}
 
-	For context, it should be noted that the 100000 time steps are equivalent to 55 hours, and most highways don't maintain a constant in-flow of traffic for over two days. For this reason, it would be helpful to examine the first few hours, perhaps similar to a morning rush hour. As can be seen in Fig.4, the lower speed limit manages to hold a lower congestion throughout most of 4 hour period. but the out-flow remains lower as well.\\
+	For context, it should be noted that the 100\,000 time steps are equivalent to 55 hours, and most highways do not maintain a constant inflow of traffic for over 2 days. For this reason, it would be helpful to examine the first few hours, perhaps similar to a morning rush hour. As can be seen in Fig.4, the lower speed limit manages to hold a lower congestion throughout most of the 4 hour period, but the outflow remains lower as well.\\
 	
 	\begin{center}
 		\includegraphics[scale=0.46]{Figures/Plain_bottleneck_4hour.png}\\
 		Fig.4.	
-		The number of stationary cars(left) and the mean out-flow(right) over 7200 time steps (4 hours) for $\nu_{max}=7$ (100km/h) and $\nu_{max}=9$ (120km/h). Note the flat part at the beginning of both plots where the cars had not reached the barrier or end of the road yet. \\
+		The number of stationary cars (left) and the mean outflow (right) over 7200 time steps (4 hours) for $\nu_{max}=7$ (100\,km/h) and $\nu_{max}=9$ (120\,km/h). Note the flat part at the beginning of both plots where the cars had not reached the barrier or end of the road yet. \\
 	\end{center}
 
 	\section{Reducing the speed limit}\label{sec:limit}
 	
 	\subsection{Differences to the previous simulation}\label{subsec:new}
 	
-	So far, we have methodically established that road bottlenecks are quite inconvenient. In this section, we shall see if reducing the speed limit before such a bottleneck can mitigate this to any effect. This simulation is mostly identical to the one from section \ref{sec:regbottle}, except that for 1200 sites before the bottleneck (9km), we have reduced the speed limit from 120km/h to 100km/h and from 100km/h to 80km/h respectively. In these regions, if a vehicle's velocity is greater than the new $\nu_{max}$, then its speed is reduced accordingly. The speed limit reduction was added quite a way in front of the bottleneck to exaggerate any effect this reduction would have on the resulting traffic conditions. The in-flow is set to the $\bar{J}_{in}$ value associated with the larger of the two $\nu_{max}$ values.\\
+	So far, we have methodically established that road bottlenecks are quite inconvenient. In this section, we shall see if reducing the speed limit before such a bottleneck can mitigate this to any effect. This simulation is mostly identical to the one from section \ref{sec:regbottle}, except that for 1200 sites before the bottleneck (9\,km) we have reduced the speed limit from 120\,km/h to 100\,km/h and from 100\,km/h to 80\,km/h, respectively. In these regions, if a vehicle's velocity is greater than the new $\nu_{max}$, then its speed is reduced accordingly. The speed limit reduction was added quite a way in front of the bottleneck to exaggerate any effect this reduction would have on the resulting traffic conditions. The inflow is set to the $\bar{J}_{in}$ value associated with the larger of the two $\nu_{max}$ values.\\
 	
 	
 	\subsection{Results}\label{subsec:results}
 	
-	The reduced-speed simulation was run for 100000 time steps. It is easily noticed from Fig.5 and Fig.6 that the two cases perform very similarly. The reduced-speed case yields a slightly lower mean out-flow and also has marginally more stationary cars over the long-time average. \\
+	The reduced-speed simulation was run for 100\,000 time steps. It is easily noticed from Fig.5 and Fig.6 that the two cases perform very similarly. The reduced-speed case yields a slightly lower mean outflow and also has marginally more stationary cars over the long-time average. \\
 	
 	\begin{center}
 		\includegraphics[scale=0.46]{Figures/Speedlimit_bottleneck_vmax7.png}\\
 		Fig.5.	
-		A comparison between the number of stationary cars(left) and the mean out-flow(right) for the regular and speed-reduced bottleneck simulations. Run for 100000 time steps with $\nu_{max}=7$ (100km/h). \\
+		A comparison between the number of stationary cars (left) and the mean outflow (right) for the regular and speed-reduced bottleneck simulations, run for 100\,000 time steps with $\nu_{max}=7$ (100\,km/h). \\
 	\end{center}
 
 	\begin{center}
 		\includegraphics[scale=0.46]{Figures/Speedlimit_bottleneck_vmax7.png}\\
 		Fig.6.	
-		A comparison between the number of stationary cars(left) and the mean out-flow(right) for the regular and speed-reduced bottleneck simulations. Run for 100000 time steps with $\nu_{max}=9$ (120km/h). \\
+		A comparison between the number of stationary cars (left) and the mean outflow (right) for the regular and speed-reduced bottleneck simulations, run for 100\,000 time steps with $\nu_{max}=9$ (120\,km/h). \\
 	\end{center}
 
-	As was discussed earlier, the full 100000 time steps does not provide proper perspective for the real-world scenario. This motivates a closer inspection of the first couple of hours. As shown in Fig.7 and Fig.8, the speed-reduced scenario performs slightly better than the regular bottleneck over shorter time-spans, albeit slightly. The number of stationary cars is generally lower and it manages to yield a slightly higher out-flow by the end of the 2 hours, for both values of $\nu_{max}$. \\
+	As was discussed earlier, the full 100\,000 time steps do not provide proper perspective for the real-world scenario. This motivates a closer inspection of the first couple of hours. As shown in Fig.7 and Fig.8, the speed-reduced scenario performs slightly better than the regular bottleneck over shorter time spans, albeit slightly. The number of stationary cars is generally lower, and it manages to yield a slightly higher outflow by the end of the 2 hours for both values of $\nu_{max}$. \\
 	
 	\begin{center}
 		\includegraphics[scale=0.46]{Figures/Speedlimit_bottleneck_vmax7_zoomed.png}\\
 		Fig.7.	
-		A closer inspection of the number of stationary cars(left) and the mean out-flow(right) over 3600 time steps (2 hours), $\nu_{max}=7$ (100km/h). \\
+		A closer inspection of the number of stationary cars (left) and the mean outflow (right) over 3600 time steps (2 hours), $\nu_{max}=7$ (100\,km/h). \\
 	\end{center}
 	
 	\begin{center}
 		\includegraphics[scale=0.46]{Figures/Speedlimit_bottleneck_vmax7_zoomed.png}\\
 		Fig.8.	
-		A closer inspection of the number of stationary cars(left) and the mean out-flow(right) over 3600 time steps (2 hours), $\nu_{max}=9$ (120km/h). \\
+		A closer inspection of the number of stationary cars (left) and the mean outflow (right) over 3600 time steps (2 hours), $\nu_{max}=9$ (120\,km/h). \\
 	\end{center}
 	
 	\section{Conclusion}\label{sec:conclusion}
 	
-	In conclusion, we have used a slightly modified two-lane Nagel--Schreckenberg model to investigate road bottlenecks. It has been shown that reducing the speed limit for a few kilometres before a bottleneck does not mitigate the effect of the bottleneck over long periods of time, but rather it slightly increases the effect. Over shorter periods of time if the respective road goes from empty to busy, say a morning rush hour, then reducing the speed limit can serve to partially reduce bottlenecks effect, but not by any meaningful extent.
+	In conclusion, we have used a slightly modified two-lane Nagel--Schreckenberg model to investigate road bottlenecks. It has been shown that reducing the speed limit for a few kilometres before a bottleneck does not mitigate the effect of the bottleneck over long periods of time, but rather it slightly increases the effect. Over shorter periods of time if the respective road goes from empty to busy, say a morning rush hour, then reducing the speed limit can serve to partially reduce bottleneck effect, but not by any meaningful extent.
 	
 	In real-world applications, there are more reasons than were explored here for why reducing the speed limit before a bottleneck is still beneficial. The most obvious of these reasons is to reduce the likelihood of car accidents. The NaSch model is designed for accidents to be impossible, so it cannot properly explore this element.
 	
@@ -197,4 +197,4 @@
 	\bibliographystyle{plain}
 	\bibliography{refs}
 	
-\end{document}
+\end{document} 
