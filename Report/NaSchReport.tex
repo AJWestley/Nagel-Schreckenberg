@@ -6,7 +6,7 @@
 \titlelabel{\thetitle.\quad}
 
 %opening
-\title{Mitigating the Effect of Road Bottlenecking Using the Two-Lane Nagel--Schreckenberg Model}
+\title{Exploring Reduced Speed Limits Before a Road Bottleneck Using the Two-Lane Nagel--Schreckenberg Model}
 \author{Westley, A.}
 
 \begin{document}
@@ -136,24 +136,61 @@
 	The bottleneck simulation was run for 100000 time steps. Fig.3 shows an average of over 1750 stationary cars by the end of the simulation for both speed limits. What is notable is that the average number of stationary cars is slightly higher when the speed limit is 100km/h, however, it takes longer to reach this average. This is likely due to cars taking longer to reach the end causing the congestion to build up slower. As would be expected, the out-flow is lower when the speed limit is lower, as was the case in the non-bottlenecked model.\\
 	
 	\begin{center}
-		\includegraphics[scale=0.46]{Figures/Plain_bottleneck_run1.png}\\
+		\includegraphics[scale=0.46]{Figures/Plain_bottleneck.png}\\
 		Fig.3.	
-		The running averages for the number of stationary cars(left) and the out-flow(right) over 10000 time steps for $\nu_{max}=7$ (100km/h) and $\nu_{max}=9$ (120km/h). \\
+		The number of stationary cars (left) and the mean out-flow(right). Run for 100000 time steps with $\nu_{max}=7$ (100km/h) and $\nu_{max}=9$ (120km/h). \\
 	\end{center}
 
-	For context, it should be noted that the 100000 time steps are equivalent to 55 hours, and most highways don't maintain a constant in-flow of traffic for over two days. For this reason, it would be helpful to examine the first few hours, perhaps similar to a morning rush hour. As can be seen in Fig.4, the lower speed limit manages to hold a lower average congestion throughout a 4 hour period. but the out-flow remains lower as well.\\
+	For context, it should be noted that the 100000 time steps are equivalent to 55 hours, and most highways don't maintain a constant in-flow of traffic for over two days. For this reason, it would be helpful to examine the first few hours, perhaps similar to a morning rush hour. As can be seen in Fig.4, the lower speed limit manages to hold a lower congestion throughout most of 4 hour period. but the out-flow remains lower as well.\\
 	
 	\begin{center}
-		\includegraphics[scale=0.46]{Figures/Plain_bottleneck_run1_4hour.png}\\
+		\includegraphics[scale=0.46]{Figures/Plain_bottleneck_4hour.png}\\
 		Fig.4.	
-		The running averages for the number of stationary cars(left) and the out-flow(right) over 7200 time steps (4 hours) for $\nu_{max}=7$ (100km/h) and $\nu_{max}=9$ (120km/h). Note the flat part at the beginning of both plots where the cars had not reached the barrier or end of the road yet. \\
+		The number of stationary cars(left) and the mean out-flow(right) over 7200 time steps (4 hours) for $\nu_{max}=7$ (100km/h) and $\nu_{max}=9$ (120km/h). Note the flat part at the beginning of both plots where the cars had not reached the barrier or end of the road yet. \\
 	\end{center}
 
 	\section{Reducing the speed limit}\label{sec:limit}
 	
-	\subsection{Reduce how?}
+	\subsection{Differences to the previous simulation}\label{subsec:new}
+	
+	So far, we have methodically established that road bottlenecks are quite inconvenient. In this section, we shall see if reducing the speed limit before such a bottleneck can mitigate this to any effect. This simulation is mostly identical to the one from section \ref{sec:regbottle}, except that for 1200 sites before the bottleneck (9km), we have reduced the speed limit from 120km/h to 100km/h and from 100km/h to 80km/h respectively. In these regions, if a vehicle's velocity is greater than the new $\nu_{max}$, then its speed is reduced accordingly. The speed limit reduction was added quite a way in front of the bottleneck to exaggerate any effect this reduction would have on the resulting traffic conditions. The in-flow is set to the $\bar{J}_{in}$ value associated with the larger of the two $\nu_{max}$ values.\\
 	
 	
+	\subsection{Results}\label{subsec:results}
+	
+	The reduced-speed simulation was run for 100000 time steps. It is easily noticed from Fig.5 and Fig.6 that the two cases perform very similarly. The reduced-speed case yields a slightly lower mean out-flow and also has marginally more stationary cars over the long-time average. \\
+	
+	\begin{center}
+		\includegraphics[scale=0.46]{Figures/Speedlimit_bottleneck_vmax7.png}\\
+		Fig.5.	
+		A comparison between the number of stationary cars(left) and the mean out-flow(right) for the regular and speed-reduced bottleneck simulations. Run for 100000 time steps with $\nu_{max}=7$ (100km/h). \\
+	\end{center}
+
+	\begin{center}
+		\includegraphics[scale=0.46]{Figures/Speedlimit_bottleneck_vmax7.png}\\
+		Fig.6.	
+		A comparison between the number of stationary cars(left) and the mean out-flow(right) for the regular and speed-reduced bottleneck simulations. Run for 100000 time steps with $\nu_{max}=9$ (120km/h). \\
+	\end{center}
+
+	As was discussed earlier, the full 100000 time steps does not provide proper perspective for the real-world scenario. This motivates a closer inspection of the first couple of hours. As shown in Fig.7 and Fig.8, the speed-reduced scenario performs slightly better than the regular bottleneck over shorter time-spans, albeit slightly. The number of stationary cars is generally lower and it manages to yield a slightly higher out-flow by the end of the 2 hours, for both values of $\nu_{max}$. \\
+	
+	\begin{center}
+		\includegraphics[scale=0.46]{Figures/Speedlimit_bottleneck_vmax7_zoomed.png}\\
+		Fig.7.	
+		A closer inspection of the number of stationary cars(left) and the mean out-flow(right) over 3600 time steps (2 hours), $\nu_{max}=7$ (100km/h). \\
+	\end{center}
+	
+	\begin{center}
+		\includegraphics[scale=0.46]{Figures/Speedlimit_bottleneck_vmax7_zoomed.png}\\
+		Fig.8.	
+		A closer inspection of the number of stationary cars(left) and the mean out-flow(right) over 3600 time steps (2 hours), $\nu_{max}=9$ (120km/h). \\
+	\end{center}
+	
+	\section{Conclusion}\label{sec:conclusion}
+	
+	In conclusion, we have used a slightly modified two-lane Nagel--Schreckenberg model to investigate road bottlenecks. It has been shown that reducing the speed limit for a few kilometres before a bottleneck does not mitigate the effect of the bottleneck over long periods of time, but rather it slightly increases the effect. Over shorter periods of time if the respective road goes from empty to busy, say a morning rush hour, then reducing the speed limit can serve to partially reduce bottlenecks effect, but not by any meaningful extent.
+	
+	In real-world applications, there are more reasons than were explored here for why reducing the speed limit before a bottleneck is still beneficial. The most obvious of these reasons is to reduce the likelihood of car accidents. The NaSch model is designed for accidents to be impossible, so it cannot properly explore this element.
 	
 	\newpage
 	
